@@ -88,6 +88,7 @@ class StrategicPlayer:
             if val[2] > 1:
                 i,j,k = self.int_to_move(key)
                 self.board.move(i,j,k,self.symbol)
+                
                 if self.symbol == board.CROSS:
                     print("YES")
                 else:
@@ -118,8 +119,8 @@ class StrategicPlayer:
             if max_score > 0:
                 i,j,k = self.int_to_move(max_trap)
                 self.board.move(i,j,k,self.symbol)
-                if self.symbol == board.CROSS:
-                    print("NO")
+                # if self.symbol == board.CROSS:
+                #     print("NO")
                 return
 
         # for key, val in transitions2.items():

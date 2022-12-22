@@ -1,8 +1,6 @@
 import numpy as np
 from random import randint
 from enum import Enum
-import gym
-from gym import spaces
 
 EMPTY = 0
 CROSS = 1
@@ -237,9 +235,91 @@ class Board:
         self.board = np.zeros((4, 4, 4), dtype=int)
         self.winning_move = ''
 
+    def move_on_summary(self, summary, move):
+        """
+        Recaculate the summary when doing move {move}
+        """
+
+        diff = np.zeros(76)
+
+        if not self.is_move_legal(move[0], move[1], move[2]):
+            return summary, diff
+
+        for i, line in enumerate(WINNING_LINES):
+            if move in line and summary[i] != -1:
+                summary[i] += 1
+                diff[i] += 1
+
+        return summary, diff
+
+    def get_move_transitions(self, summary, move):
+
+        trans = [0, 0, 0, 0]
+
+        if not self.is_move_legal(move[0], move[1], move[2]):
+            return trans
+
+        for i, line in enumerate(WINNING_LINES):
+            if move in line and summary[i] != -1:
+                trans[int(summary[i])] += 1
+
+        return trans
+
+    def get_candidate_moves_from_summary(self, summary):
+
+        moves = []
+
+        for i, num in enumerate(summary):
+            legal_moves = []
+            if num != -1:
+                for move in WINNING_LINES[i]:
+                    if self.is_move_legal(move[0], move[1], move[2]):
+                        legal_moves.append(move)
+            moves.append(legal_moves)
+
+        return moves
+
+    def compact_summary(self, symbol):
+        summary = self.summary(symbol)
+        other_summary = self.summary(self.other_side(symbol))
+
+        csum = [summary[i] if summary[i] > -1 else -1 * other_summary[i] for i in range(76)]
+
+        return csum
+
+    def summary(self, symbol):
+        """
+        Generates summary of the winning lines on the board, from the perspective of {symbol}.
+        Basically a list where the index is the id and the number represents the nr of spaces taken by symbol (-1 if not available)
+        """
+
+        # Check for end states
+        board = np.copy(self.board)
+        board[np.where(board == WILDCARD)] = symbol
+
+        summary = np.zeros(76, dtype=int) - 1
+
+        other_symbol = CROSS if symbol == NOUGHT else NOUGHT
+
+        for i, line in enumerate(WINNING_LINES):
+            numSym = 0
+            numOther = 0
+            for coords in line:
+                if board[coords[0], coords[1], coords[2]] == symbol:
+                    numSym += 1
+                elif board[coords[0], coords[1], coords[2]] == other_symbol:
+                    numOther += 1
+
+            if numOther == 0 and numSym < 4:
+                summary[i] = numSym
+
+        return summary
+
+
     def count_winning_lines(self, symbol):
         """
         Counts how many winning lines {symbol} has still available and also sorts them according to size
+        Also returns all available winning lines and line IDs
           0: no space taken
           1: 1 space taken (or wildcard)
           2: 2 spaces taken (or wildcards)
@@ -253,10 +333,11 @@ class Board:
 
         counts = [0, 0, 0, 0]
         lines = [[], [], [], []]
+        lineIDs = [[], [], [], []]
 
         other_symbol = CROSS if symbol == NOUGHT else NOUGHT
 
-        for line in WINNING_LINES:
+        for i, line in enumerate(WINNING_LINES):
             numSym = 0
             numOther = 0
             for coords in line:
@@ -268,6 +349,7 @@ class Board:
             if numOther == 0 and numSym < 4:
                 counts[numSym] += 1
                 lines[numSym].append(line)
+                lineIDs[numSym].append(i)
 
         return counts, lines
         
@@ -296,6 +378,10 @@ class Board:
             
             if len(self.get_legal_moves()[0]) == 0:
                 self.state = DRAW
+        else:
+            # End game
+            self.state = NOUGHT if symbol == CROSS else NOUGHT
+            
 
         return self.state
         #     # Straights (three to check)
