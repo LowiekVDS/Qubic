@@ -37,6 +37,7 @@ class StrategicPlayer:
             for move in lines[p][0]:
                 i, j, k = move
                 if self.board.is_move_legal(i, j, k):
+                    # print("won")
                     self.board.move(i, j, k, self.symbol)
                     return
 
@@ -46,6 +47,7 @@ class StrategicPlayer:
             for move in lines2[p][0]:
                 i, j, k = move
                 if self.board.is_move_legal(i, j, k):
+                    # print("block")
                     self.board.move(i, j, k, self.symbol)
                     return
 
@@ -89,10 +91,10 @@ class StrategicPlayer:
                 i,j,k = self.int_to_move(key)
                 self.board.move(i,j,k,self.symbol)
                 
-                if self.symbol == board.CROSS:
-                    print("YES")
-                else:
-                    print("fine i guess")
+                # if self.symbol == board.NOUGHT:
+                #     print("YES")
+                # else:
+                #     print("fine i guess")
                 return
 
         # Detect enemy traps
@@ -119,7 +121,7 @@ class StrategicPlayer:
             if max_score > 0:
                 i,j,k = self.int_to_move(max_trap)
                 self.board.move(i,j,k,self.symbol)
-                # if self.symbol == board.CROSS:
+                # if self.symbol == board.NOUGHT:
                 #     print("NO")
                 return
 
@@ -149,8 +151,8 @@ class StrategicPlayer:
         #         return
 
         # Backup
-        if self.symbol == board.CROSS:
-            print("backup")
+        # if self.symbol == board.CROSS:
+        #     print("backup")
         
         max_val = 0
         max_key = 0
@@ -182,9 +184,11 @@ class StrategicPlayer:
 
         # print('tsy')
         i,j,k = self.int_to_move(max_key)
-        self.board.move(i,j,k,self.symbol)
 
-        if max_val == 0:
+        if self.board.is_move_legal(i,j,k):
+            self.board.move(i,j,k,self.symbol)
+
+        else:
             legal_moves = self.board.get_legal_moves()
             N = len(legal_moves[0])
 

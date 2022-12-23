@@ -198,15 +198,22 @@ class Board:
         res += "=========   =========   =========   =========\n"
         return res
 
-    def to_tensor(self):
-        tensor = np.zeros((4, 4, 4, 4), dtype=bool)
+    def to_tensor(self, symbol):
+        tensor = np.zeros(128, dtype=bool)
 
         for i in range(4):
             for j in range(4):
                 for k in range(4):
-                    tensor[i, j, k, self.board[i, j, k]] = True
 
-        return tensor #.flatten()
+                    if self.board[i, j, k] == symbol:
+                        tensor[i * 16 + j * 4 + k] = True
+                    elif self.board[i, j, k] == self.other_side(symbol):
+                        tensor[i * 16 + j * 4 + k + 64] = True
+                    elif self.board[i, j, k] == WILDCARD:
+                        tensor[i * 16 + j * 4 + k] = True
+                        tensor[i * 16 + j * 4 + k + 64] = True
+
+        return tensor
 
     def random_empty_spot(self):
         legal_moves = self.get_legal_moves()
@@ -380,8 +387,10 @@ class Board:
                 self.state = DRAW
         else:
             # End game
-            self.state = NOUGHT if symbol == CROSS else NOUGHT
-            
+            if not self.is_move_legal(x, y, z):
+                print("ILLEGAL MOVE", x, y, z)
+                self.state = NOUGHT if symbol == CROSS else NOUGHT
+
 
         return self.state
         #     # Straights (three to check)
